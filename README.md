@@ -1,11 +1,30 @@
-<div align="center">
+# Hisab Desk - Freelance Income Manager
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+এই প্রজেক্টটি ফ্রিল্যান্সারদের ইনকাম, প্রজেক্ট এবং ট্রানজেকশন ম্যানেজ করার জন্য তৈরি করা হয়েছে। এটি একটি আধুনিক এবং রেসপনসিভ ড্যাশবোর্ড সাপোর্টেড ওয়েব অ্যাপ।
 
-  <h1>Built with AI Studio</h2>
+## ফিচারসমূহ:
+- ড্যাশবোর্ড ওভারভিউ (ইনকাম, বকেয়া, প্রজেক্ট স্ট্যাটাস)
+- বায়ার/ক্লায়েন্ট ম্যানেজমেন্ট
+- প্রজেক্ট ট্র্যাকিং (পেন্ডিং, রানিং, ডেলিভারি)
+- ট্রানজেকশন এবং পেমেন্ট হিস্ট্রি
+- ডার্ক এবং লাইট মোড সাপোর্ট
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## গিটহাবে হোস্ট করার নিয়ম:
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+এই প্রজেক্টটি গিটহাবে হোস্ট করা এখন অনেক সহজ। আমি অলরেডি গিটহাব অ্যাকশন কনফিগার করে দিয়েছি।
 
-</div>
+১. আপনার গিটহাব অ্যাকাউন্টে একটি নতুন রিপোজিটরি তৈরি করুন।
+২. আপনার কোডগুলো সেখানে পুশ (Push) করুন।
+৩. গিটহাব রিপোজিটরির **Settings > Pages** এ যান।
+৪. **Build and deployment** সেকশনে **Source** হিসেবে **GitHub Actions** সিলেক্ট করুন।
+৫. এখন আপনি যখনই `main` ব্রাঞ্চে কোনো কোড পুশ করবেন, গিটহাব অটোমেটিক অ্যাপটি বিল্ড করে হোস্ট করে দিবে।
+
+---
+
+## টেকনোলজি:
+- HTML5 / CSS3 (Tailwind CSS)
+- JavaScript (Vanilla / Alpine.js style)
+- Supabase (Database & Auth)
+- Vite (Build Tool)
+
+**ডেভেলপড বাই: AI সহকারী**

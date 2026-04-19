@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hisab Desk - Freelance Income Manager</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- CDNs -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f5f7ff',
+                            100: '#ebf0fe',
+                            200: '#ced9fd',
+                            300: '#b1c2fb',
+                            400: '#7695f8',
+                            500: '#6366f1', // Accent color from theme
+                            600: '#595cd9',
+                            700: '#4a4db5',
+                            800: '#3b3e91',
+                            900: '#313276',
+                        },
+                        sidebar: '#1e293b',
+                        surface: '#f4f7fa'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        /* CustomScrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+        .view-content {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(2px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loader {
+            border-top-color: #6366f1;
+            animation: spinner 0.6s linear infinite;
+        }
+
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Minimal Design System Overrides */
+        .glass {
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .dark .glass {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .stat-card-minimal {
+            border-left: 4px solid #6366f1;
+            border-radius: 12px;
+        }
+        
+        .nav-item-minimal {
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .taka-symbol {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            display: inline-block;
+            line-height: 1;
+        }
+
+        .taka-large { font-size: 1.3em; margin-right: 4px; }
+        .taka-small { font-size: 1.1em; margin-left: 2px; opacity: 0.85; }
+    </style>
+</head>
+<body class="bg-[#f4f7fa] dark:bg-slate-950 text-slate-700 dark:text-slate-100 min-h-screen font-sans">
+    
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-[#f4f7fa] dark:bg-slate-950">
+        <div class="w-full max-w-md p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+            <div class="flex flex-col items-center mb-8">
+                <div class="p-4 bg-primary-100 dark:bg-primary-900/30 rounded-2xl mb-4">
+                    <i data-lucide="wallet" class="w-8 h-8 text-primary-600"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight">Hisab Desk</h1>
+                <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">আপনার ইনকাম ড্যাশবোর্ড</p>
+            </div>
+            
+            <form id="auth-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">ইমেইল</label>
+                    <input type="email" id="auth-email" required class="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">পাসওয়ার্ড</label>
+                    <input type="password" id="auth-password" required class="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm">
+                </div>
+                <button type="submit" id="auth-submit" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 rounded-lg transition-all mt-4 flex items-center justify-center gap-2 text-sm">
+                    <span>প্রবেশ করুন</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+            <div class="mt-6 text-center">
+                <button id="toggle-auth-mode" class="text-sm text-primary-600 hover:underline">নতুন অ্যাকাউন্ট তৈরি করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div id="app-layout" class="hidden flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-sidebar text-white transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:flex flex-col flex-shrink-0 shadow-2xl md:shadow-none">
+            <div class="p-6 pb-10 flex items-center justify-between">
+                <span class="text-xl font-bold tracking-tight text-primary-500">Hisab Desk</span>
+                <button id="close-sidebar-btn" class="md:hidden p-2 text-slate-400">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+                <button data-view="dashboard" class="nav-link active w-full flex items-center gap-3 px-4 py-3 nav-item-minimal transition-all text-slate-400 hover:text-white">
+                    <i data-lucide="home" class="w-4 h-4"></i>
+                    <span class="text-sm font-medium">ড্যাশবোর্ড</span>
+                </button>
+                <button data-view="buyers" class="nav-link w-full flex items-center gap-3 px-4 py-3 nav-item-minimal transition-all text-slate-400 hover:text-white">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span class="text-sm font-medium">ক্লায়েন্ট</span>
+                </button>
+                <button data-view="projects" class="nav-link w-full flex items-center gap-3 px-4 py-3 nav-item-minimal transition-all text-slate-400 hover:text-white">
+                    <i data-lucide="briefcase" class="w-4 h-4"></i>
+                    <span class="text-sm font-medium">প্রজেক্ট</span>
+                </button>
+                <button data-view="transactions" class="nav-link w-full flex items-center gap-3 px-4 py-3 nav-item-minimal transition-all text-slate-400 hover:text-white">
+                    <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                    <span class="text-sm font-medium">ট্রানজেকশন</span>
+                </button>
+                <button data-view="due" class="nav-link w-full flex items-center gap-3 px-4 py-3 nav-item-minimal transition-all text-slate-400 hover:text-white">
+                    <i data-lucide="clock" class="w-4 h-4"></i>
+                    <span class="text-sm font-medium">বকেয়া</span>
+                </button>
+            </nav>
+            
+            <div class="p-4 border-t border-slate-800">
+                <button id="logout-btn" class="w-full flex items-center gap-3 px-4 py-3 nav-item-minimal transition-all text-red-400 hover:bg-red-500/10 hover:text-red-300">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span class="text-sm font-medium">লগআউট</span>
+                </button>
+            </div>
+            
+            <div class="p-6 text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                Powered by Supabase
+            </div>
+        </aside>
+
+        <!-- Sidebar Overlay (Mobile) -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-40 hidden md:hidden"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+            <!-- Header -->
+            <header class="h-16 flex-shrink-0 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 z-10 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                    <h2 id="view-title" class="text-base md:text-lg font-bold truncate max-w-[120px] md:max-w-none">Dashboard</h2>
+                </div>
+                
+                <div class="flex items-center gap-2 md:gap-6">
+                    <button id="toggle-theme" class="p-2 transition-all text-slate-400 hover:text-slate-600">
+                        <i data-lucide="sun" id="sun-icon" class="w-4 h-4 hidden"></i>
+                        <i data-lucide="moon" id="moon-icon" class="w-4 h-4 border-0"></i>
+                    </button>
+                    <div id="user-badge" class="flex items-center gap-2 md:gap-3">
+                        <span id="user-email-display" class="hidden sm:block text-xs md:text-sm font-medium text-slate-600 truncate max-w-[100px] md:max-w-[150px]"></span>
+                        <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-primary-500 border-2 border-white shadow-sm flex items-center justify-center text-white">
+                            <i data-lucide="user" class="w-3 h-3 md:w-4 md:h-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-8" id="view-container">
+                <!-- Views will be injected here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container" class="fixed inset-0 z-[60] hidden pointer-events-none">
+        <div class="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px] pointer-events-auto" id="modal-overlay"></div>
+        <div class="relative flex items-center justify-center min-h-screen p-4">
+            <div id="modal-content" class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 pointer-events-auto transform transition-all scale-95 opacity-0"></div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="global-loader" class="fixed inset-0 z-[100] flex items-center justify-center bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm hidden">
+        <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-10 w-10"></div>
+    </div>
+
+    <script>
+        // --- CONSTANTS & CONFIG ---
+        // REPLACE THESE WITH YOUR SUPABASE CREDENTIALS
+        const SUPABASE_URL = 'https://ilhzgnzfpvtooexazsvh.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaHpnbnpmcHZ0b29leGF6c3ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MzkyODIsImV4cCI6MjA5MjExNTI4Mn0.CNpqtMKXu-W_h2CLaDdrIMmBBTZBqi_IZwpsCl67Bzo';
+
+        // Initial State
+        let state = {
+            user: null,
+            view: 'dashboard',
+            isDark: window.matchMedia('(prefers-color-scheme: dark)').matches,
+            buyers: [],
+            projects: [],
+            transactions: [],
+            loading: false,
+            dateFilter: {
+                from: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
+                to: new Date().toISOString().split('T')[0]
+            }
+        };
+
+        let supabaseClient = null;
+        if (SUPABASE_URL && SUPABASE_KEY) {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } else {
+            console.warn("Supabase credentials missing. App will run in limited mode.");
+        }
+
+        // --- CORE UI LOGIC ---
+        function initApp() {
+            lucide.createIcons();
+            
+            // Theme setup
+            if (state.isDark) document.documentElement.classList.add('dark');
+            
+            // Check session
+            checkSession();
+            
+            // Sidebar logic
+            const sidebar = document.getElementById('app-sidebar');
+            const toggleSidebar = () => {
+                const isOpen = sidebar.style.transform === 'translateX(0px)';
+                sidebar.style.transform = isOpen ? 'translateX(-100%)' : 'translateX(0px)';
+                document.getElementById('sidebar-overlay').classList.toggle('hidden', isOpen);
+            };
+
+            // Event Listeners
+            document.querySelectorAll('[data-view]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const view = e.currentTarget.dataset.view;
+                    switchView(view);
+                    if (window.innerWidth < 768) {
+                        sidebar.style.transform = 'translateX(-100%)';
+                        document.getElementById('sidebar-overlay').classList.add('hidden');
+                    }
+                });
+            });
+
+            function addEvent(id, event, handler) {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener(event, handler);
+            }
+
+            addEvent('mobile-menu-btn', 'click', toggleSidebar);
+            addEvent('close-sidebar-btn', 'click', toggleSidebar);
+            addEvent('sidebar-overlay', 'click', toggleSidebar);
+            addEvent('logout-btn', 'click', handleLogout);
+            addEvent('toggle-theme', 'click', toggleTheme);
+            addEvent('auth-form', 'submit', handleAuth);
+            addEvent('toggle-auth-mode', 'click', toggleAuthMode);
+            addEvent('modal-overlay', 'click', closeModal);
+        }
+
+        async function checkSession() {
+            if (!supabaseClient) {
+                showAuthScreen();
+                alert("স্বাগতম! দয়া করে index.html ফাইলের উপরে Supabase URL এবং Key সেট করুন। এটা না করলে প্রজেক্টটি সঠিকভাবে কাজ করবে না।");
+                return;
+            }
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                state.user = session.user;
+                showApp();
+                await fetchData();
+                renderDashboard();
+            } else {
+                showAuthScreen();
+            }
+        }
+
+        function showAuthScreen() {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('app-layout').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-layout').classList.remove('hidden');
+            document.getElementById('user-email-display').textContent = state.user?.email || 'User';
+        }
+
+        async function fetchData() {
+            if (!supabaseClient) return;
+            showLoading(true);
+            try {
+                const [buyersLog, projectsLog, transactionsLog] = await Promise.all([
+                    supabaseClient.from('buyers').select('*').order('created_at', { ascending: false }),
+                    supabaseClient.from('projects').select('*').order('created_at', { ascending: false }),
+                    supabaseClient.from('transactions').select('*').order('created_at', { ascending: false })
+                ]);
+
+                state.buyers = buyersLog.data || [];
+                state.projects = projectsLog.data || [];
+                state.transactions = transactionsLog.data || [];
+            } catch (e) {
+                console.error(e);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show) {
+            state.loading = show;
+            document.getElementById('global-loader').classList.toggle('hidden', !show);
+        }
+
+        // --- VIEW MANAGEMENT ---
+        function switchView(viewName) {
+            state.view = viewName;
+            
+            // Update UI
+            document.querySelectorAll('.nav-link').forEach(btn => {
+                const isActive = btn.dataset.view === viewName;
+                btn.classList.toggle('active', isActive);
+                btn.classList.toggle('bg-primary-600', isActive);
+                btn.classList.toggle('text-white', isActive);
+                btn.classList.toggle('text-slate-400', !isActive);
+            });
+            
+            const titles = {
+                dashboard: 'Dashboard Overview',
+                buyers: 'Client Management',
+                projects: 'Project Tracking',
+                transactions: 'Recent Transactions',
+                due: 'Upcoming Due'
+            };
+            
+            document.getElementById('view-title').textContent = titles[viewName];
+            
+            const container = document.getElementById('view-container');
+            container.innerHTML = ''; // Clear
+            container.className = 'flex-1 overflow-y-auto p-6 space-y-8 view-content';
+            
+            if (viewName === 'dashboard') renderDashboard();
+            else if (viewName === 'buyers') renderBuyers();
+            else if (viewName === 'projects') renderProjects();
+            else if (viewName === 'transactions') renderTransactions();
+            else if (viewName === 'due') renderDue();
+            
+            lucide.createIcons();
+        }
+
+        // --- AUTH LOGIC ---
+        let isSignUp = false;
+        function toggleAuthMode() {
+            isSignUp = !isSignUp;
+            document.getElementById('auth-submit').querySelector('span').textContent = isSignUp ? 'অ্যাকাউন্ট তৈরি করুন' : 'প্রবেশ করুন';
+            document.getElementById('toggle-auth-mode').textContent = isSignUp ? 'আগে থেকেই অ্যাকাউন্ট আছে? লগইন করুন' : 'নতুন অ্যাকাউন্ট তৈরি করুন';
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            if (!supabaseClient) return alert("Supabase config required!");
+            
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            
+            showLoading(true);
+            const { data, error } = isSignUp 
+                ? await supabaseClient.auth.signUp({ email, password })
+                : await supabaseClient.auth.signInWithPassword({ email, password });
+            
+            if (error) {
+                alert(error.message);
+                showLoading(false);
+                return;
+            }
+            
+            if (isSignUp && data.user && data.session === null) {
+                alert('আপনার ইমেইলে কনফার্মেশন পাঠানো হয়েছে। দয়া করে চেক করুন।');
+                showLoading(false);
+                return;
+            }
+            
+            state.user = data.user;
+            showApp();
+            await fetchData();
+            switchView('dashboard');
+            showLoading(false);
+        }
+
+        async function handleLogout() {
+            if (supabaseClient) await supabaseClient.auth.signOut();
+            state.user = null;
+            showAuthScreen();
+        }
+
+        function toggleTheme() {
+            state.isDark = !state.isDark;
+            document.documentElement.classList.toggle('dark', state.isDark);
+            document.getElementById('sun-icon').classList.toggle('hidden', !state.isDark);
+            document.getElementById('moon-icon').classList.toggle('hidden', state.isDark);
+        }
+
+        // --- DASHBOARD RENDERER ---
+        function renderDashboard() {
+            const container = document.getElementById('view-container');
+            
+            // Filters
+            const fromDate = new Date(state.dateFilter.from);
+            const toDate = new Date(state.dateFilter.to);
+            toDate.setHours(23, 59, 59, 999); // Inclusion check
+
+            // Filtered Transactions
+            const filteredTransactions = state.transactions.filter(t => {
+                const d = new Date(t.transaction_date);
+                return d >= fromDate && d <= toDate;
+            });
+
+            // Filtered Delivered Projects (based on delivery date)
+            const filteredDeliveredProjects = state.projects.filter(p => {
+                if (p.status !== 'Delivered' || !p.delivery_date) return false;
+                const d = new Date(p.delivery_date);
+                return d >= fromDate && d <= toDate;
+            });
+
+            // Calculations
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayIncome = state.transactions
+                .filter(t => t.transaction_date === todayStr)
+                .reduce((sum, t) => sum + Number(t.amount), 0);
+                
+            const totalIncomeFiltered = filteredTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+            const totalIncomeLifetime = state.transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+            const totalProjectValue = state.projects.reduce((sum, p) => sum + Number(p.total_amount), 0);
+            const totalDue = Math.max(0, totalProjectValue - state.transactions.reduce((sum, t) => sum + Number(t.amount), 0));
+
+            // Operational Stats
+            const pendingProjectsCount = state.projects.filter(p => p.status === 'Pending').length;
+            const inProgressProjectsCount = state.projects.filter(p => p.status === 'In Progress').length;
+            const deliveredInPeriod = filteredDeliveredProjects.length;
+            
+            // Special trackers (always historical/fixed but showing as cards now)
+            const deliveredWeekly = state.projects.filter(p => {
+                if (p.status !== 'Delivered' || !p.delivery_date) return false;
+                const d = new Date(p.delivery_date);
+                const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+                return d >= weekAgo;
+            }).length;
+
+            const deliveredMonthly = state.projects.filter(p => {
+                if (p.status !== 'Delivered' || !p.delivery_date) return false;
+                const d = new Date(p.delivery_date);
+                const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate() - 30);
+                return d >= monthAgo;
+            }).length;
+
+            const pendingBuyersCount = state.buyers.filter(b => {
+                return state.projects.some(p => p.buyer_id === b.id && p.status !== 'Delivered');
+            }).length;
+
+            container.innerHTML = `
+                <!-- Filter Bar -->
+                <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center gap-4">
+                        <div class="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                            <i data-lucide="filter" class="w-4 h-4 text-primary-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold">বিজনেস এনালাইজ</h4>
+                            <p class="text-[10px] text-slate-400 font-medium">আপনার পছন্দমতো সময়সীমা বেছে নিন</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-4">
+                        <!-- Presets -->
+                        <div class="flex items-center gap-1.5 p-1 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800 w-full md:w-auto overflow-x-auto">
+                            <button onclick="setDashboardPreset(7)" class="flex-1 md:flex-none px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all ${Math.ceil(Math.abs(new Date(state.dateFilter.to) - new Date(state.dateFilter.from)) / (1000 * 3600 * 24)) === 7 ? 'bg-white dark:bg-slate-800 shadow-sm text-primary-600' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-800'}">৭ দিন</button>
+                            <button onclick="setDashboardPreset(15)" class="flex-1 md:flex-none px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all ${Math.ceil(Math.abs(new Date(state.dateFilter.to) - new Date(state.dateFilter.from)) / (1000 * 3600 * 24)) === 15 ? 'bg-white dark:bg-slate-800 shadow-sm text-primary-600' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-800'}">১৫ দিন</button>
+                            <button onclick="setDashboardPreset(30)" class="flex-1 md:flex-none px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all ${Math.ceil(Math.abs(new Date(state.dateFilter.to) - new Date(state.dateFilter.from)) / (1000 * 3600 * 24)) === 30 ? 'bg-white dark:bg-slate-800 shadow-sm text-primary-600' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-800'}">১ মাস</button>
+                            <button onclick="setDashboardPreset('lifetime')" class="flex-1 md:flex-none px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all ${state.dateFilter.from === '2000-01-01' ? 'bg-white dark:bg-slate-800 shadow-sm text-primary-600' : 'text-slate-500 hover:bg-white dark:hover:bg-slate-800'}">লাইফটাইম</button>
+                        </div>
+
+                        <div class="h-8 w-px bg-slate-100 dark:bg-slate-800 hidden md:block"></div>
+
+                        <!-- Manual Dates (Hidden on mobile) -->
+                        <div class="hidden md:flex items-center gap-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] font-black uppercase text-slate-400">থেকে</span>
+                                <input type="date" id="filter-from" value="${state.dateFilter.from}" onchange="updateDashboardFilter()" class="text-xs px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-1 focus:ring-primary-500 outline-none font-medium">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] font-black uppercase text-slate-400">পর্যন্ত</span>
+                                <input type="date" id="filter-to" value="${state.dateFilter.to}" onchange="updateDashboardFilter()" class="text-xs px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-1 focus:ring-primary-500 outline-none font-medium">
+                            </div>
+                        </div>
+
+                        <button onclick="resetDashboardFilter()" class="p-2 text-slate-400 hover:text-red-500 transition-colors hidden md:block" title="রিসেট">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Financial Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+                    ${renderStatCard('আজকের ইনকাম', todayIncome, 'trending-up', 'text-slate-400', 'border-primary-500')}
+                    ${renderStatCard('লাইফটাইম ইনকাম', totalIncomeLifetime, 'dollar-sign', 'text-slate-400', 'border-emerald-500')}
+                    ${renderStatCard('বকেয়া', totalDue, 'clock', 'text-slate-400', 'border-red-500', true, "switchView('due')")}
+                    ${renderStatCard('পেন্ডিং অর্ডার', pendingProjectsCount, 'user-check', 'text-slate-400', 'border-amber-500', false, "switchView('projects')")}
+                    ${renderStatCard('টোটাল ক্লাইন্ট', state.buyers.length, 'users', 'text-slate-400', 'border-indigo-500', false, "switchView('buyers')")}
+                    ${renderStatCard('টোটাল প্রজেক্ট', state.projects.length, 'layout', 'text-slate-400', 'border-slate-500', false, "switchView('projects')")}
+                </div>
+
+                <!-- Operational Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    ${renderStatCard('রানিং অর্ডার', inProgressProjectsCount, 'loader', 'text-slate-400', 'border-blue-500', false, "switchView('projects')")}
+                    ${renderStatCard('সম্পূর্ণ হয়েছে', deliveredInPeriod, 'check-circle', 'text-slate-400', 'border-emerald-400', false, "switchView('projects')")}
+                    ${renderStatCard('গত সাত দিনের অর্ডার', deliveredWeekly, 'calendar', 'text-slate-400', 'border-purple-500', false, "switchView('projects')")}
+                    ${renderStatCard('গত ৩০ দিনের অর্ডার', deliveredMonthly, 'calendar', 'text-slate-400', 'border-pink-500', false, "switchView('projects')")}
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-2">
+                    <!-- Graph Panels -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="glass p-6 rounded-xl flex flex-col">
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
+                                <i data-lucide="bar-chart-2" class="w-3 h-3 text-primary-500"></i> Period Activity Performance
+                            </h3>
+                            <div class="h-[180px] chart-container">
+                                <canvas id="weeklyChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="glass p-6 rounded-xl flex flex-col">
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
+                                <i data-lucide="calendar" class="w-3 h-3 text-emerald-500"></i> Monthly Revenue Growth (Total)
+                            </h3>
+                            <div class="h-[180px] chart-container">
+                                <canvas id="monthlyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Transactions Panel -->
+                    <div class="glass p-5 md:p-6 rounded-xl flex flex-col overflow-hidden">
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6 font-display">চলমান পাঁচটি ট্রানজেকশন</h3>
+                        <div class="flex-1 space-y-px">
+                            <table class="w-full text-xs">
+                                <thead class="text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-800">
+                                    <tr>
+                                        <th class="text-left pb-2 text-[10px] md:text-xs">Client</th>
+                                        <th class="text-right pb-2 text-[10px] md:text-xs">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
+                                    ${filteredTransactions.length ? filteredTransactions.slice(0, 5).map(t => {
+                                        const buyer = state.buyers.find(b => b.id === t.buyer_id);
+                                        const project = state.projects.find(p => p.id === t.project_id);
+                                        return `
+                                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                                <td class="py-3 pr-2">
+                                                    <div class="font-bold text-slate-700 dark:text-slate-200 text-[11px] md:text-sm">${buyer?.name || 'Unknown'}</div>
+                                                    <div class="text-[8px] md:text-[9px] text-slate-400 uppercase tracking-tight">${project?.project_name || 'Generic'}</div>
+                                                </td>
+                                                <td class="py-3 text-right">
+                                                    <div class="font-bold text-slate-900 dark:text-slate-100 text-[11px] md:text-sm whitespace-nowrap">${Number(t.amount).toLocaleString()}<span class="taka-symbol taka-small ml-0.5">৳</span></div>
+                                                    <div class="text-[8px] md:text-[9px] text-slate-400 uppercase font-bold text-right">${t.payment_type}</div>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('') : `<tr><td colspan="2" class="py-10 text-center text-slate-300">No transactions in this period</td></tr>`}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-center hidden">
+                            <button onclick="openModal('addTransaction')" class="w-full md:w-auto px-5 py-2.5 bg-primary-600 text-white rounded-lg text-xs md:text-sm font-bold flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                                <i data-lucide="zap" class="w-4 h-4"></i> Add Payment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            initDashboardCharts();
+            lucide.createIcons();
+        }
+
+        function updateDashboardFilter() {
+            state.dateFilter.from = document.getElementById('filter-from').value;
+            state.dateFilter.to = document.getElementById('filter-to').value;
+            renderDashboard();
+        }
+
+        function setDashboardPreset(days) {
+            const to = new Date();
+            let from = new Date();
+            
+            if (days === 'lifetime') {
+                from = new Date('2000-01-01');
+            } else {
+                from.setDate(to.getDate() - days);
+            }
+            
+            state.dateFilter = {
+                from: from.toISOString().split('T')[0],
+                to: to.toISOString().split('T')[0]
+            };
+            renderDashboard();
+        }
+
+        function resetDashboardFilter() {
+            state.dateFilter = {
+                from: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
+                to: new Date().toISOString().split('T')[0]
+            };
+            renderDashboard();
+        }
+
+        function renderStatCard(label, value, icon, iconColor, borderColor, showCurrency = true, onclick = "") {
+            const clickableClass = onclick ? 'cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 active:scale-95' : '';
+            return `
+                <div 
+                    ${onclick ? `onclick="${onclick}"` : ''} 
+                    class="bg-white dark:bg-slate-900 p-4 md:p-6 lg:p-8 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 border-l-4 ${borderColor} flex flex-col gap-1 md:gap-3 ${clickableClass}"
+                >
+                    <span class="text-[9px] md:text-[10px] lg:text-xs font-bold uppercase tracking-widest text-slate-400 leading-none">${label}</span>
+                    <div class="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800 dark:text-white truncate flex items-baseline leading-tight">
+                        ${showCurrency ? '<span class="taka-symbol taka-large text-primary-500 mr-2 pb-1">৳</span>' : ''}${Number(value).toLocaleString()}
+                    </div>
+                </div>
+            `;
+        }
+
+        function initDashboardCharts() {
+            const weekCtx = document.getElementById('weeklyChart');
+            const monthCtx = document.getElementById('monthlyChart');
+            
+            if (weekCtx) {
+                const fromDate = new Date(state.dateFilter.from);
+                const toDate = new Date(state.dateFilter.to);
+                const diffTime = Math.abs(toDate - fromDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+                // Create dynamic labels and data array
+                const labels = [];
+                const dataPoints = new Array(Math.min(diffDays, 31)).fill(0); // Cap at 31 for better visualization
+                
+                for (let i = 0; i < dataPoints.length; i++) {
+                    const d = new Date(fromDate);
+                    d.setDate(d.getDate() + i);
+                    labels.push(d.getDate() + ' ' + ['জানু', 'ফেব', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টে', 'অক্টো', 'নভে', 'ডিসে'][d.getMonth()]);
+                    
+                    const dayStr = d.toISOString().split('T')[0];
+                    const dayTotal = state.transactions
+                        .filter(t => t.transaction_date === dayStr)
+                        .reduce((sum, t) => sum + Number(t.amount), 0);
+                    dataPoints[i] = dayTotal;
+                }
+
+                new Chart(weekCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'ইনকাম',
+                            data: dataPoints,
+                            borderColor: '#0ea5e9',
+                            backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: dataPoints.length > 15 ? 0 : 4,
+                            pointBackgroundColor: '#0ea5e9'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { display: false }, ticks: { display: false } },
+                            x: { grid: { display: false }, ticks: { font: { size: 8, family: 'Inter' } } }
+                        }
+                    }
+                });
+            }
+
+            if (monthCtx) {
+                const monthsNames = ['জানু', 'ফেব', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টে', 'অক্টো', 'নভে', 'ডিসে'];
+                const monthlyData = new Array(12).fill(0);
+                state.transactions.forEach(t => {
+                    const m = new Date(t.transaction_date).getMonth();
+                    monthlyData[m] += Number(t.amount);
+                });
+
+                new Chart(monthCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: monthsNames,
+                        datasets: [{
+                            label: 'ইনকাম (৳)',
+                            data: monthlyData,
+                            backgroundColor: '#6366f1',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: state.isDark ? '#1e293b' : '#f1f5f9' }, ticks: { font: { size: 9, family: 'Inter' } } },
+                            x: { grid: { display: false }, ticks: { font: { size: 9, family: 'Inter' } } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // --- BUYERS RENDERER ---
+        function renderBuyers() {
+            const container = document.getElementById('view-container');
+            container.innerHTML = `
+                <div class="flex flex-col gap-8">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold">Client Management</h3>
+                            <p class="text-slate-400 text-xs mt-1">Directory of all your business clients</p>
+                        </div>
+                        <button onclick="openModal('addBuyer')" class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-primary-700 transition-all shadow-sm">
+                            <i data-lucide="plus" class="w-4 h-4"></i> New Client
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${state.buyers.map(b => {
+                            const buyerProjects = state.projects.filter(p => p.buyer_id === b.id);
+                            const totalValue = buyerProjects.reduce((sum, p) => sum + Number(p.total_amount), 0);
+                            const totalPaid = state.transactions.filter(t => t.buyer_id === b.id).reduce((sum, t) => sum + Number(t.amount), 0);
+                            const due = totalValue - totalPaid;
+
+                            return `
+                                <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm group hover:border-primary-500/50 transition-all cursor-pointer" onclick="viewBuyerDetails('${b.id}')">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="w-12 h-12 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary-600 font-bold text-lg border border-slate-100 dark:border-slate-700">
+                                            ${b.name.charAt(0)}
+                                        </div>
+                                        <div class="flex flex-col items-end">
+                                            <button onclick="event.stopPropagation(); openModal('editBuyer', {id: '${b.id}'})" class="p-1.5 text-slate-400 hover:text-primary-500 mb-2 transition-colors">
+                                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                            <div class="text-right">
+                                                <span class="text-[9px] uppercase font-bold tracking-widest text-slate-400">Projects</span>
+                                                <p class="text-sm font-bold">${buyerProjects.length}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-base font-bold text-slate-800 dark:text-white mb-0.5">${b.name}</h4>
+                                    <div class="space-y-1 mb-4">
+                                        <p class="text-[10px] text-slate-400 flex items-center gap-1.5">
+                                            <i data-lucide="phone" class="w-3 h-3"></i> ${b.contact || 'No number'}
+                                        </p>
+                                        ${b.email ? `
+                                        <p class="text-[10px] text-slate-400 flex items-center gap-1.5">
+                                            <i data-lucide="mail" class="w-3 h-3"></i> ${b.email}
+                                        </p>` : ''}
+                                        ${b.address ? `
+                                        <p class="text-[10px] text-slate-400 flex items-center gap-1.5">
+                                            <i data-lucide="map-pin" class="w-3 h-3"></i> ${b.address}
+                                        </p>` : ''}
+                                    </div>
+                                    
+                                    <div class="space-y-2 pt-4 border-t border-slate-50 dark:border-slate-800">
+                                        <div class="flex justify-between text-[11px]">
+                                            <span class="text-slate-400 font-medium">প্রজেক্টের মূল্য</span>
+                                            <span class="font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">${totalValue.toLocaleString()}<span class="taka-symbol taka-small">৳</span></span>
+                                        </div>
+                                        <div class="flex justify-between text-[11px]">
+                                            <span class="text-slate-400 font-medium">অ্যাডভান্স/পেইড</span>
+                                            <span class="font-bold text-emerald-600 whitespace-nowrap">${totalPaid.toLocaleString()}<span class="taka-symbol taka-small">৳</span></span>
+                                        </div>
+                                        <div class="flex justify-between text-[11px]">
+                                            <span class="text-slate-400 font-medium">বকেয়া</span>
+                                            <span class="font-bold text-red-500 whitespace-nowrap">${due.toLocaleString()}<span class="taka-symbol taka-small">৳</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // --- PROJECTS RENDERER ---
+        function renderProjects() {
+            const container = document.getElementById('view-container');
+            container.innerHTML = `
+                <div class="flex flex-col gap-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-bold">Active Projects</h3>
+                        <button onclick="openModal('addProject')" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                            <i data-lucide="folder-plus" class="w-4 h-4"></i> New Project
+                        </button>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs min-w-[600px]">
+                                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                    <tr class="border-b border-slate-100 dark:border-slate-700">
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Project Name</th>
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Client</th>
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Project Price</th>
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Paid/Advance</th>
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Due</th>
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Start Date</th>
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Delivery Date</th>
+                                        <th class="p-4"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                    ${state.projects.map(p => {
+                                        const paid = state.transactions.filter(t => t.project_id === p.id).reduce((sum, t) => sum + Number(t.amount), 0);
+                                        const due = Math.max(0, Number(p.total_amount) - paid);
+                                        return `
+                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                            <td class="p-4 font-bold text-slate-800 dark:text-white">${p.project_name}</td>
+                                            <td class="p-4 text-slate-500">${state.buyers.find(b => b.id === p.buyer_id)?.name || 'Deleted'}</td>
+                                            <td class="p-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">${Number(p.total_amount).toLocaleString()}<span class="taka-symbol taka-small">৳</span></td>
+                                            <td class="p-4 font-bold text-emerald-600 whitespace-nowrap">${paid.toLocaleString()}<span class="taka-symbol taka-small">৳</span></td>
+                                            <td class="p-4 font-bold text-red-500 whitespace-nowrap">${due.toLocaleString()}<span class="taka-symbol taka-small">৳</span></td>
+                                            <td class="p-4">
+                                                <select 
+                                                    onchange="updateProjectStatus('${p.id}', this.value)"
+                                                    class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider outline-none border-none cursor-pointer ${p.status === 'Delivered' ? 'bg-green-100 text-green-700' : p.status === 'In Progress' ? 'bg-primary-100 text-primary-700' : 'bg-slate-100 text-slate-600'}"
+                                                >
+                                                    <option value="Pending" ${p.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                                    <option value="In Progress" ${p.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                                    <option value="Delivered" ${p.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                                                </select>
+                                            </td>
+                                            <td class="p-4 text-slate-400 font-medium">${p.start_date ? new Date(p.start_date).toLocaleDateString('bn-BD') : '-'}</td>
+                                            <td class="p-4 text-slate-400 font-medium">${p.delivery_date ? new Date(p.delivery_date).toLocaleDateString('bn-BD') : '-'}</td>
+                                            <td class="p-4 text-right flex items-center justify-end gap-2">
+                                                <button class="p-1.5 rounded-md hover:bg-primary-50 hover:text-primary-500 transition-all" onclick="openModal('editProject', {id: '${p.id}'})">
+                                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                                <button class="p-1.5 rounded-md hover:bg-red-50 hover:text-red-500 transition-all" onclick="deleteProject('${p.id}')">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `;}).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // --- TRANSACTIONS RENDERER ---
+        function renderTransactions() {
+            const container = document.getElementById('view-container');
+            container.innerHTML = `
+                <div class="flex flex-col gap-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-bold">Transaction History</h3>
+                        <button onclick="openModal('addTransaction')" class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Add Payment
+                        </button>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+                         <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs min-w-[600px]">
+                                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                    <tr class="border-b border-slate-100 dark:border-slate-700">
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Client</th>
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Method</th>
+                                        <th class="p-4 font-bold text-slate-500 uppercase tracking-wider">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                    ${state.transactions.map(t => {
+                                        const buyer = state.buyers.find(b => b.id === t.buyer_id);
+                                        const project = state.projects.find(p => p.id === t.project_id);
+                                        return `
+                                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                                <td class="p-4 text-slate-400 font-medium">${new Date(t.transaction_date).toLocaleDateString('bn-BD')}</td>
+                                                <td class="p-4">
+                                                    <div class="font-bold text-slate-800 dark:text-white mb-0.5">${buyer?.name || 'Anonymous'}</div>
+                                                    <div class="text-[9px] text-slate-400 uppercase tracking-tight font-bold">${project?.project_name || 'Generic Payment'}</div>
+                                                </td>
+                                                <td class="p-4">
+                                                    <select 
+                                                        onchange="updateTransactionMethod('${t.id}', this.value)"
+                                                        class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider outline-none border-none cursor-pointer ${
+                                                            ['Bkash', 'Nagad', 'Upay', 'Rocket'].includes(t.payment_type) ? 'bg-red-50 text-red-600' : 
+                                                            t.payment_type === 'Binance' ? 'bg-yellow-50 text-yellow-600' :
+                                                            t.payment_type === 'Bank Transfer' ? 'bg-blue-50 text-blue-600' :
+                                                            'bg-green-50 text-green-600'
+                                                        }"
+                                                    >
+                                                        <option value="Bkash" ${t.payment_type === 'Bkash' ? 'selected' : ''}>Bkash</option>
+                                                        <option value="Nagad" ${t.payment_type === 'Nagad' ? 'selected' : ''}>Nagad</option>
+                                                        <option value="Upay" ${t.payment_type === 'Upay' ? 'selected' : ''}>Upay</option>
+                                                        <option value="Rocket" ${t.payment_type === 'Rocket' ? 'selected' : ''}>Rocket</option>
+                                                        <option value="Binance" ${t.payment_type === 'Binance' ? 'selected' : ''}>Binance</option>
+                                                        <option value="Bank Transfer" ${t.payment_type === 'Bank Transfer' ? 'selected' : ''}>Bank Transfer</option>
+                                                        <option value="Cash" ${t.payment_type === 'Cash' ? 'selected' : ''}>Cash</option>
+                                                        <option value="Other" ${t.payment_type === 'Other' ? 'selected' : ''}>Other</option>
+                                                    </select>
+                                                </td>
+                                                <td class="p-4 font-bold text-emerald-600 text-sm whitespace-nowrap">
+                                                    +${Number(t.amount).toLocaleString()}<span class="taka-symbol taka-small">৳</span>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // --- DUE RENDERER ---
+        function renderDue() {
+            const container = document.getElementById('view-container');
+            
+            const dueList = state.buyers.map(b => {
+                const projectValue = state.projects.filter(p => p.buyer_id === b.id).reduce((sum, p) => sum + Number(p.total_amount), 0);
+                const paid = state.transactions.filter(t => t.buyer_id === b.id).reduce((sum, t) => sum + Number(t.amount), 0);
+                return { ...b, due: projectValue - paid };
+            }).filter(b => b.due > 0);
+
+            container.innerHTML = `
+                <div class="flex flex-col gap-6">
+                    <div>
+                        <h3 class="text-xl font-bold">Outstanding Payments</h3>
+                        <p class="text-slate-400 text-xs mt-1">Clients with pending dues on projects</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        ${dueList.length ? dueList.map(item => `
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm border-l-4 border-l-red-500">
+                                <span class="text-[9px] uppercase font-bold text-slate-400 tracking-widest">${item.name}</span>
+                                <div class="text-2xl font-bold text-red-500 mt-2 mb-4 flex items-baseline gap-1">
+                                    <span>${item.due.toLocaleString()}</span>
+                                    <span class="taka-symbol taka-small">৳</span>
+                                </div>
+                                <button onclick="openModal('addTransaction', {buyerId: '${item.id}'})" class="w-full py-2 bg-slate-50 dark:bg-slate-800 text-slate-600 hover:bg-slate-100 transition-all rounded-lg text-xs font-bold">Receive Payment</button>
+                            </div>
+                        `).join('') : '<div class="col-span-full py-20 text-center text-slate-400">Perfect! No outstanding dues.</div>'}
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // --- MODAL SYSTEM ---
+        function openModal(type, data = {}) {
+            const modal = document.getElementById('modal-container');
+            const content = document.getElementById('modal-content');
+            
+            let html = '';
+            
+            if (type === 'addBuyer' || type === 'editBuyer') {
+                const isEdit = type === 'editBuyer';
+                const buyer = isEdit ? state.buyers.find(b => b.id === data.id) : null;
+                
+                html = `
+                    <div class="p-8">
+                        <h3 class="text-2xl font-bold font-display mb-6">${isEdit ? 'বায়ার এডিট করুন' : 'নতুন বায়ার যোগ করুন'}</h3>
+                        <form id="add-buyer-form" class="space-y-4">
+                            <input type="hidden" id="b-id" value="${buyer?.id || ''}">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">বায়ারের নাম <span class="text-red-500">*</span></label>
+                                <input type="text" id="b-name" required value="${buyer?.name || ''}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">মোবাইল নাম্বার (ঐচ্ছিক)</label>
+                                    <input type="text" id="b-contact" value="${buyer?.contact || ''}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">ইমেইল জিমেইল (ঐচ্ছিক)</label>
+                                    <input type="email" id="b-email" value="${buyer?.email || ''}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">ঠিকানা/অন্যান্য (ঐচ্ছিক)</label>
+                                <textarea id="b-address" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">${buyer?.address || ''}</textarea>
+                            </div>
+                            <div class="pt-4 flex gap-3">
+                                <button type="button" onclick="closeModal()" class="flex-1 py-3 font-semibold text-slate-500">বাতিল</button>
+                                <button type="submit" class="flex-1 py-3 bg-primary-600 text-white rounded-xl font-bold shadow-lg shadow-primary-500/20">${isEdit ? 'আপডেট করুন' : 'সেভ করুন'}</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+            } else if (type === 'addProject' || type === 'editProject') {
+                const isEdit = type === 'editProject';
+                const project = isEdit ? state.projects.find(p => p.id === data.id) : null;
+                
+                html = `
+                    <div class="p-8">
+                        <h3 class="text-2xl font-bold font-display mb-6">${isEdit ? 'প্রজেক্ট এডিট করুন' : 'নতুন প্রজেক্ট তৈরি করুন'}</h3>
+                        <form id="add-project-form" class="space-y-4">
+                            <input type="hidden" id="p-id" value="${project?.id || ''}">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">বায়ার সিলেক্ট করুন</label>
+                                <select id="p-buyer" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                    ${state.buyers.map(b => `<option value="${b.id}" ${project?.buyer_id === b.id ? 'selected' : ''}>${b.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">স্ট্যাটাস</label>
+                                    <select id="p-status" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                        <option ${project?.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option ${project?.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                        <option ${project?.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">প্রজেক্ট নাম</label>
+                                    <input type="text" id="p-name" required value="${project?.project_name || ''}" placeholder="e.g. Website Design" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">প্রজেক্টের মূল্য (৳)</label>
+                                <input type="number" id="p-amount" required value="${project?.total_amount || ''}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                            </div>
+                            ${isEdit ? '' : `
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1 text-emerald-600">অ্যাডভান্স পেমেন্ট (৳)</label>
+                                    <input type="number" id="p-advance" value="0" class="w-full px-4 py-2.5 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-950/30 focus:ring-emerald-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">পেমেন্ট টাইপ</label>
+                                    <select id="p-payment-type" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                        <option>Bkash</option>
+                                        <option>Nagad</option>
+                                        <option>Upay</option>
+                                        <option>Rocket</option>
+                                        <option>Binance</option>
+                                        <option>Bank Transfer</option>
+                                        <option>Cash</option>
+                                    </select>
+                                </div>
+                            </div>
+                            `}
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">প্রজেক্ট শুরুর তারিখ</label>
+                                    <input type="date" id="p-start-date" value="${project?.start_date || new Date().toISOString().split('T')[0]}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">ডেলিভারি তারিখ</label>
+                                    <input type="date" id="p-date" value="${project?.delivery_date || ''}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                </div>
+                            </div>
+                            <div class="pt-4 flex gap-3">
+                                <button type="button" onclick="closeModal()" class="flex-1 py-3 font-semibold text-slate-500">বাতিল</button>
+                                <button type="submit" class="flex-1 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl font-bold">${isEdit ? 'আপডেট করুন' : 'প্রজেক্ট খুলুন'}</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+            } else if (type === 'addTransaction') {
+                html = `
+                    <div class="p-8">
+                        <h3 class="text-2xl font-bold font-display mb-6">পেমেন্ট এন্ট্রি</h3>
+                        <form id="add-transaction-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">বায়ার</label>
+                                <select id="t-buyer" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                    ${state.buyers.map(b => `<option value="${b.id}" ${data.buyerId === b.id ? 'selected' : ''}>${b.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">প্রজেক্ট (যদি থাকে)</label>
+                                <select id="t-project" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                    <option value="">জেনারেল পেমেন্ট</option>
+                                    ${state.projects.map(p => {
+                                        const b = state.buyers.find(x => x.id === p.buyer_id);
+                                        return `<option value="${p.id}" data-buyer="${p.buyer_id}">${p.project_name} (${b?.name})</option>`;
+                                    }).join('')}
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label class="block text-sm font-medium">টাকার পরিমাণ (৳)</label>
+                                        <div class="flex gap-2">
+                                            <button type="button" onclick="setPaymentAmount(1)" class="text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md hover:bg-primary-100 transition-colors">ALL</button>
+                                            <button type="button" onclick="setPaymentAmount(0.5)" class="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md hover:bg-slate-200 transition-colors">50%</button>
+                                        </div>
+                                    </div>
+                                    <input type="number" id="t-amount" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">পেমেন্ট টাইপ</label>
+                                    <select id="t-type" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                        <option>Bkash</option>
+                                        <option>Nagad</option>
+                                        <option>Upay</option>
+                                        <option>Rocket</option>
+                                        <option>Binance</option>
+                                        <option>Bank Transfer</option>
+                                        <option>Cash</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">তারিখ</label>
+                                <input type="date" id="t-date" required value="${new Date().toISOString().split('T')[0]}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                            </div>
+                            <div class="pt-4 flex gap-3">
+                                <button type="button" onclick="closeModal()" class="flex-1 py-3 font-semibold text-slate-500">বাতিল</button>
+                                <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20">টাকা রিসিভড</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+            }
+
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('opacity-0', 'scale-95');
+                content.classList.add('opacity-100', 'scale-100');
+            }, 10);
+            
+            // Re-bind form submits
+            const buyerForm = document.getElementById('add-buyer-form');
+            if (buyerForm) buyerForm.onsubmit = (e) => saveBuyer(e);
+            
+            const projectForm = document.getElementById('add-project-form');
+            if (projectForm) projectForm.onsubmit = (e) => saveProject(e);
+            
+            const transactionForm = document.getElementById('add-transaction-form');
+            if (transactionForm) transactionForm.onsubmit = (e) => saveTransaction(e);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal-container');
+            const content = document.getElementById('modal-content');
+            content.classList.remove('opacity-100', 'scale-100');
+            content.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                content.innerHTML = '';
+            }, 300);
+        }
+
+        // --- DATABASE OPERATIONS ---
+        async function saveBuyer(e) {
+            e.preventDefault();
+            if (!supabaseClient) return alert("Credentials Missing!");
+            
+            const id = document.getElementById('b-id').value;
+            const name = document.getElementById('b-name').value;
+            const contact = document.getElementById('b-contact').value;
+            const email = document.getElementById('b-email').value;
+            const address = document.getElementById('b-address').value;
+            
+            showLoading(true);
+            const data = { 
+                name, 
+                contact, 
+                email, 
+                address,
+                user_id: state.user.id 
+            };
+
+            const query = id 
+                ? supabaseClient.from('buyers').update(data).eq('id', id)
+                : supabaseClient.from('buyers').insert([data]);
+
+            const { error } = await query;
+            
+            if (error) {
+                console.error(error);
+                alert("Error: " + error.message + "\n\nNote: If you haven't added 'email' and 'address' columns to your 'buyers' table in Supabase, please do so in the SQL Editor.");
+            } else {
+                await fetchData();
+                closeModal();
+                switchView('buyers');
+            }
+            showLoading(false);
+        }
+
+        async function saveProject(e) {
+            e.preventDefault();
+            if (!supabaseClient) return alert("Credentials Missing!");
+            
+            const id = document.getElementById('p-id')?.value || '';
+            const buyer_id = document.getElementById('p-buyer').value;
+            const project_name = document.getElementById('p-name').value;
+            const total_amount = Number(document.getElementById('p-amount').value);
+            const advance_amount = document.getElementById('p-advance') ? Number(document.getElementById('p-advance').value) : 0;
+            const payment_type = document.getElementById('p-payment-type')?.value;
+            const status = document.getElementById('p-status')?.value || 'Pending';
+            const start_date = document.getElementById('p-start-date').value || null;
+            const delivery_date = document.getElementById('p-date').value || null;
+            
+            showLoading(true);
+            const dataObj = { 
+                buyer_id, project_name, total_amount, status, start_date, delivery_date, user_id: state.user.id 
+            };
+
+            const query = id 
+                ? supabaseClient.from('projects').update(dataObj).eq('id', id)
+                : supabaseClient.from('projects').insert([dataObj]);
+
+            const { data, error } = await query.select();
+            
+            if (error) {
+                console.error(error);
+                alert("Error: " + error.message + "\n\nNote: If you haven't added 'start_date' column to your 'projects' table in Supabase, please do so in the SQL Editor (type: date).");
+            } else {
+                // Advance payment ONLY for new projects
+                if (!id && advance_amount > 0 && data && data.length > 0) {
+                    const projectId = data[0].id;
+                    await supabaseClient.from('transactions').insert([{
+                        buyer_id,
+                        project_id: projectId,
+                        amount: advance_amount,
+                        payment_type: payment_type || 'Cash',
+                        transaction_date: new Date().toISOString().split('T')[0],
+                        user_id: state.user.id
+                    }]);
+                }
+                
+                await fetchData();
+                closeModal();
+                switchView(state.view);
+            }
+            showLoading(false);
+        }
+
+        async function saveTransaction(e) {
+            e.preventDefault();
+            if (!supabaseClient) return alert("Credentials Missing!");
+            
+            const buyer_id = document.getElementById('t-buyer').value;
+            const project_id = document.getElementById('t-project').value || null;
+            const amount = Number(document.getElementById('t-amount').value);
+            const payment_type = document.getElementById('t-type').value;
+            const transaction_date = document.getElementById('t-date').value;
+            
+            showLoading(true);
+            const { error } = await supabaseClient.from('transactions').insert([{ 
+                buyer_id, project_id, amount, payment_type, transaction_date, user_id: state.user.id 
+            }]);
+            
+            if (error) alert(error.message);
+            else {
+                await fetchData();
+
+                // Automation: Payment -> Delivery
+                if (project_id) {
+                    const proj = state.projects.find(p => p.id === project_id);
+                    const totalPaid = state.transactions
+                        .filter(t => t.project_id === project_id)
+                        .reduce((sum, t) => sum + Number(t.amount), 0);
+                    
+                    if (proj && totalPaid >= Number(proj.total_amount) && proj.status !== 'Delivered') {
+                        await supabaseClient.from('projects').update({ status: 'Delivered' }).eq('id', project_id);
+                        await fetchData();
+                    }
+                } else if (buyer_id) {
+                    // General payment - check if buyer total paid covers all projects
+                    const buyerValue = state.projects.filter(p => p.buyer_id === buyer_id).reduce((sum, p) => sum + Number(p.total_amount), 0);
+                    const buyerPaid = state.transactions.filter(t => t.buyer_id === buyer_id).reduce((sum, t) => sum + Number(t.amount), 0);
+                    
+                    const openProjects = state.projects.filter(p => p.buyer_id === buyer_id && p.status !== 'Delivered');
+                    if (buyerPaid >= buyerValue && openProjects.length > 0) {
+                        await supabaseClient.from('projects').update({ status: 'Delivered' }).eq('buyer_id', buyer_id);
+                        await fetchData();
+                    }
+                }
+
+                closeModal();
+                switchView(state.view);
+            }
+            showLoading(false);
+        }
+
+        async function deleteProject(id) {
+            if (!confirm('আপনি কি এই প্রজেক্টটি ডিলিট করতে চান?')) return;
+            showLoading(true);
+            await supabaseClient.from('projects').delete().eq('id', id);
+            await fetchData();
+            switchView('projects');
+            showLoading(false);
+        }
+
+        async function updateProjectStatus(id, newStatus) {
+            if (!supabaseClient) return;
+            const proj = state.projects.find(p => p.id === id);
+            const oldStatus = proj ? proj.status : null;
+            
+            showLoading(true);
+
+            // Automation: Manual Delivery -> Auto Payment
+            if (newStatus === 'Delivered' && oldStatus !== 'Delivered') {
+                if (proj) {
+                    const totalPaid = state.transactions
+                        .filter(t => t.project_id === id)
+                        .reduce((sum, t) => sum + Number(t.amount), 0);
+                    
+                    const due = Number(proj.total_amount) - totalPaid;
+                    if (due > 0) {
+                        await supabaseClient.from('transactions').insert([{
+                            buyer_id: proj.buyer_id,
+                            project_id: id,
+                            amount: due,
+                            payment_type: 'Cash',
+                            transaction_date: new Date().toISOString().split('T')[0],
+                            user_id: state.user.id
+                        }]);
+                    }
+                }
+            }
+            // Automation: Undo Delivery -> Undo Auto Payment
+            else if (oldStatus === 'Delivered' && newStatus !== 'Delivered') {
+                const lastTx = state.transactions.find(t => t.project_id === id);
+                if (lastTx) {
+                    await supabaseClient.from('transactions').delete().eq('id', lastTx.id);
+                }
+            }
+
+            const { error } = await supabaseClient
+                .from('projects')
+                .update({ status: newStatus })
+                .eq('id', id);
+            
+            if (error) alert(error.message);
+            else {
+                await fetchData();
+                switchView('projects');
+            }
+            showLoading(false);
+        }
+
+        async function updateTransactionMethod(id, newMethod) {
+            if (!supabaseClient) return;
+            showLoading(true);
+            const { error } = await supabaseClient
+                .from('transactions')
+                .update({ payment_type: newMethod })
+                .eq('id', id);
+            
+            if (error) alert(error.message);
+            else {
+                await fetchData();
+                switchView('transactions');
+            }
+            showLoading(false);
+        }
+
+        // --- UTILS ---
+        function setPaymentAmount(factor) {
+            const buyerId = document.getElementById('t-buyer').value;
+            const projectId = document.getElementById('t-project').value;
+            const amountInput = document.getElementById('t-amount');
+            
+            if (!buyerId) return;
+
+            let due = 0;
+            if (projectId) {
+                // If specific project is selected, calculate due for that project
+                const proj = state.projects.find(p => p.id === projectId);
+                if (proj) {
+                    const paid = state.transactions
+                        .filter(t => t.project_id === projectId)
+                        .reduce((sum, t) => sum + Number(t.amount), 0);
+                    due = Math.max(0, Number(proj.total_amount) - paid);
+                }
+            } else {
+                // General due for buyer across all projects
+                const totalValue = state.projects
+                    .filter(p => p.buyer_id === buyerId)
+                    .reduce((sum, p) => sum + Number(p.total_amount), 0);
+                const totalPaid = state.transactions
+                    .filter(t => t.buyer_id === buyerId)
+                    .reduce((sum, t) => sum + Number(t.amount), 0);
+                due = Math.max(0, totalValue - totalPaid);
+            }
+
+            amountInput.value = Math.round(due * factor);
+        }
+
+        function viewBuyerDetails(id) {
+            // Just for demo, you can build a separate detail view
+            alert("বায়ার ডিটেইলস ফিচারটি শীঘ্রই আসছে! বর্তমান ড্যাশবোর্ড এবং রেন্ডারিং বায়ার মেকানিক্স চেক করুন।");
+        }
+
+        // Start
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
