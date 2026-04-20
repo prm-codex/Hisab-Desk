@@ -1696,8 +1696,16 @@
 
         // Start
         window.addEventListener('DOMContentLoaded', async () => {
-             await initApp();
-             await checkPublicReceipt();
+            const params = new URLSearchParams(window.location.search);
+            const receiptId = params.get('view_receipt');
+
+            if (receiptId) {
+                // If the link is for a public receipt, prioritize it
+                await checkPublicReceipt();
+            } else {
+                // Otherwise, proceed with normal app initialization
+                initApp();
+            }
         });
     </script>
 </body>
