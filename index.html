@@ -107,10 +107,37 @@
         .taka-small { font-size: 1.1em; margin-left: 2px; opacity: 0.85; }
 
         @media print {
-            body * { visibility: hidden; }
-            #receipt-printable, #receipt-printable * { visibility: visible; }
-            #receipt-printable { position: absolute; left: 0; top: 0; width: 100%; }
-            .no-print { display: none !important; }
+            body { 
+                background: white !important; 
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            #app-layout, #auth-screen, #global-loader, #sidebar-overlay, .no-print { 
+                display: none !important; 
+            }
+            #receipt-modal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                display: block !important;
+                background: white !important;
+                z-index: 9999 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+            #receipt-modal > div {
+                box-shadow: none !important;
+                border: none !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                border-radius: 0 !important;
+            }
+            #receipt-printable {
+                min-height: auto !important;
+                padding: 0 !important;
+            }
         }
     </style>
 </head>
@@ -1539,9 +1566,10 @@
                             <button onclick="window.print()" class="bg-primary-600 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-primary-700 transition-all">
                                 <i data-lucide="printer" class="w-4 h-4"></i> প্রিন্ট / PDF
                             </button>
+                            ${state.user ? `
                             <button onclick="copyReceiptLink('${buyerId}')" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-slate-300 transition-all">
                                 <i data-lucide="share-2" class="w-4 h-4"></i> শেয়ার লিংক
-                            </button>
+                            </button>` : ''}
                         </div>
                         <button onclick="document.getElementById('receipt-modal').remove()" class="p-2 text-slate-400 hover:text-red-500 transition-colors">
                             <i data-lucide="x" class="w-6 h-6"></i>
