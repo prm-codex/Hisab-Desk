@@ -1508,18 +1508,18 @@
             const container = document.getElementById('view-container');
             container.innerHTML = `
                 <div class="flex flex-col gap-6">
-                    <div>
+                    <div class="px-2">
                         <h3 class="text-xl font-bold">রিসিভ জেনারেটর</h3>
                         <p class="text-slate-400 text-xs mt-1">ক্লাইন্ট সিলেক্ট করে মেমো বা রিসিভ তৈরি করুন</p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                         ${state.buyers.map(b => {
                             const buyerProjects = state.projects.filter(p => p.buyer_id === b.id);
                             const totalValue = buyerProjects.reduce((sum, p) => sum + Number(p.total_amount), 0);
                             const totalPaid = state.transactions.filter(t => t.buyer_id === b.id).reduce((sum, t) => sum + Number(t.amount), 0);
                             const due = totalValue - totalPaid;
                             return `
-                                <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                                <div class="bg-white dark:bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
                                     <div>
                                         <h4 class="text-lg font-bold mb-1">${b.name}</h4>
                                         <p class="text-xs text-slate-400 mb-4">${b.contact || 'No number'}</p>
@@ -1561,18 +1561,18 @@
 
             const modal = document.createElement('div');
             modal.id = 'receipt-modal';
-            modal.className = 'fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto';
+            modal.className = 'fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4 overflow-y-auto';
             modal.innerHTML = `
-                <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-fadeIn relative">
+                <div class="bg-white dark:bg-slate-900 w-full max-w-2xl min-h-screen sm:min-h-0 sm:rounded-2xl shadow-2xl overflow-hidden animate-fadeIn relative flex flex-col">
                     <!-- Actions -->
                     <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center no-print bg-slate-50 dark:bg-slate-800/50">
                         <div class="flex gap-2">
-                            <button onclick="window.print()" class="bg-primary-600 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-primary-700 transition-all">
-                                <i data-lucide="printer" class="w-4 h-4"></i> প্রিন্ট / PDF
+                            <button onclick="window.print()" class="bg-primary-600 text-white px-3 md:px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold flex items-center gap-2 hover:bg-primary-700 transition-all">
+                                <i data-lucide="printer" class="w-3 h-3 md:w-4 md:h-4"></i> প্রিন্ট / PDF
                             </button>
                             ${state.user ? `
-                            <button onclick="copyReceiptLink('${buyerId}')" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-slate-300 transition-all">
-                                <i data-lucide="share-2" class="w-4 h-4"></i> শেয়ার লিংক
+                            <button onclick="copyReceiptLink('${buyerId}')" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 md:px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold flex items-center gap-2 hover:bg-slate-300 transition-all">
+                                <i data-lucide="share-2" class="w-3 h-3 md:w-4 md:h-4"></i> শেয়ার লিংক
                             </button>` : ''}
                         </div>
                         <button onclick="document.getElementById('receipt-modal').remove()" class="p-2 text-slate-400 hover:text-red-500 transition-colors">
@@ -1581,80 +1581,80 @@
                     </div>
 
                     <!-- Receipt Template -->
-                    <div id="receipt-printable" class="p-8 md:p-12 text-slate-800 bg-white flex flex-col">
+                    <div id="receipt-printable" class="p-6 sm:p-10 md:p-12 text-slate-800 bg-white flex-1 flex flex-col">
                         <!-- Header -->
-                        <div class="flex justify-between items-start mb-12">
+                        <div class="flex flex-col sm:flex-row justify-between items-start gap-6 sm:gap-4 mb-10 sm:mb-12">
                             <div>
-                                <h1 class="text-3xl font-black tracking-tight text-primary-600 mb-2">Hisab Desk</h1>
-                                <p class="text-sm text-slate-500">Professional Invoice & Statement</p>
+                                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-primary-600 mb-1">Hisab Desk</h1>
+                                <p class="text-xs sm:text-sm text-slate-500">Professional Invoice & Statement</p>
                             </div>
-                            <div class="text-right">
-                                <h2 class="text-xl font-bold uppercase tracking-widest text-slate-300 mb-1">Invoice</h2>
-                                <p class="text-xs font-bold text-slate-500">Date: ${new Date().toLocaleDateString('bn-BD')}</p>
+                            <div class="text-left sm:text-right">
+                                <h2 class="text-lg sm:text-xl font-bold uppercase tracking-widest text-slate-300 mb-1">Invoice</h2>
+                                <p class="text-[10px] sm:text-xs font-bold text-slate-500">Date: ${new Date().toLocaleDateString('bn-BD')}</p>
                             </div>
                         </div>
 
                         <!-- Info -->
-                        <div class="grid grid-cols-2 gap-8 mb-12">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-10 sm:mb-12">
                             <div>
-                                <h4 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Bill To:</h4>
-                                <h3 class="text-xl font-bold mb-1">${buyer.name}</h3>
-                                <p class="text-sm text-slate-500 leading-relaxed">
-                                    ${buyer.contact || ''}<br>
-                                    ${buyer.email || ''}<br>
-                                    ${buyer.address || ''}
-                                </p>
+                                <h4 class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 sm:mb-3">Bill To:</h4>
+                                <h3 class="text-lg sm:text-xl font-bold mb-1">${buyer.name}</h3>
+                                <div class="text-xs sm:text-sm text-slate-500 space-y-0.5">
+                                    <p>${buyer.contact || ''}</p>
+                                    <p>${buyer.email || ''}</p>
+                                    <p>${buyer.address || ''}</p>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <h4 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">From:</h4>
-                                <h3 class="text-xl font-bold mb-1">PRM Codex</h3>
-                                <p class="text-sm text-slate-500">Developer & Designer</p>
+                            <div class="sm:text-right">
+                                <h4 class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 sm:mb-3">From:</h4>
+                                <h3 class="text-lg sm:text-xl font-bold mb-1">PRM Codex</h3>
+                                <p class="text-xs sm:text-sm text-slate-500">Developer & Designer</p>
                             </div>
                         </div>
 
                         <!-- Summary Table -->
-                        <div class="flex-1">
-                            <table class="w-full text-left mb-12">
+                        <div class="flex-1 overflow-x-auto -mx-2 sm:mx-0">
+                            <table class="w-full text-left mb-10 min-w-[500px]">
                                 <thead class="border-b-2 border-slate-900">
                                     <tr>
-                                        <th class="py-4 font-bold text-xs uppercase tracking-widest">Item Description</th>
-                                        <th class="py-4 text-right font-bold text-xs uppercase tracking-widest">Amount</th>
+                                        <th class="py-4 font-bold text-[10px] sm:text-xs uppercase tracking-widest">Item Description</th>
+                                        <th class="py-4 text-right font-bold text-[10px] sm:text-xs uppercase tracking-widest">Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     ${projects.map(p => `
                                         <tr>
                                             <td class="py-4">
-                                                <div class="font-bold text-sm">${p.project_name}</div>
-                                                <div class="text-[10px] text-slate-400 italic">${p.status}</div>
+                                                <div class="font-bold text-xs sm:text-sm">${p.project_name}</div>
+                                                <div class="text-[9px] sm:text-[10px] text-slate-400 italic">${p.status}</div>
                                             </td>
-                                            <td class="py-4 text-right font-bold text-sm">
+                                            <td class="py-4 text-right font-bold text-xs sm:text-sm">
                                                 ${Number(p.total_amount).toLocaleString()}৳
                                             </td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
-                                <tfoot>
-                                    <tr class="border-t-2 border-slate-100">
-                                        <td class="py-4 font-bold text-sm text-slate-400">Total Price</td>
-                                        <td class="py-4 text-right font-bold text-lg">${subtotal.toLocaleString()}৳</td>
+                                <tfoot class="border-t-2 border-slate-900/10">
+                                    <tr>
+                                        <td class="py-4 font-bold text-[11px] sm:text-sm text-slate-400">Total Price</td>
+                                        <td class="py-4 text-right font-bold text-base sm:text-lg">${subtotal.toLocaleString()}৳</td>
                                     </tr>
                                     <tr>
-                                        <td class="py-4 font-bold text-sm text-emerald-500">Total Paid</td>
-                                        <td class="py-4 text-right font-bold text-lg text-emerald-600">-${paid.toLocaleString()}৳</td>
+                                        <td class="py-4 font-bold text-[11px] sm:text-sm text-emerald-500">Total Paid</td>
+                                        <td class="py-4 text-right font-bold text-base sm:text-lg text-emerald-600">-${paid.toLocaleString()}৳</td>
                                     </tr>
-                                    <tr class="border-t-4 border-double border-slate-900 bg-slate-50">
-                                        <td class="p-4 font-bold text-base">Remaining Due</td>
-                                        <td class="p-4 text-right font-black text-2xl text-red-500">${balance.toLocaleString()}৳</td>
+                                    <tr class="bg-slate-50">
+                                        <td class="p-3 sm:p-4 font-bold text-xs sm:text-base border-l-4 border-red-500">Remaining Due</td>
+                                        <td class="p-3 sm:p-4 text-right font-black text-xl sm:text-2xl text-red-500">${balance.toLocaleString()}৳</td>
                                     </tr>
                                 </tfoot>
                             </table>
                         </div>
 
                         <!-- Footer -->
-                        <div class="border-t border-slate-100 pt-8 mt-12 text-center">
-                            <p class="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-2">Thank you for your business!</p>
-                            <p class="text-[9px] text-slate-300">This is a system generated computer receipt. Contact PRM Codex for any queries.</p>
+                        <div class="border-t border-slate-100 pt-8 mt-6 sm:mt-12 text-center">
+                            <p class="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-2">Thank you for your business!</p>
+                            <p class="text-[8px] sm:text-[9px] text-slate-300">This is a system generated computer receipt. Contact PRM Codex for any queries.</p>
                         </div>
                     </div>
                 </div>
@@ -1678,11 +1678,17 @@
         // --- PUBLIC RECEIPT VIEW ---
         async function checkPublicReceipt() {
             const params = new URLSearchParams(window.location.search);
-            const receiptId = params.get('view_receipt');
-            if (receiptId) {
+            const rawId = params.get('view_receipt');
+            
+            if (rawId) {
+                const receiptId = rawId.trim().split('/')[0]; // Final trim for some mobile sharing scenarios
+                
                 // Ensure layout is hidden during public view to avoid login screen background
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('app-layout').classList.add('hidden');
+                document.getElementById('auth-screen')?.classList.add('hidden');
+                document.getElementById('app-layout')?.classList.add('hidden');
+
+                // Apply initial theme
+                if (state.isDark) document.documentElement.classList.add('dark');
 
                 showLoading(true);
                 try {
@@ -1704,22 +1710,22 @@
                         const receiptModal = document.getElementById('receipt-modal');
                         if (receiptModal) {
                             receiptModal.classList.remove('bg-slate-900/80');
-                            receiptModal.classList.add('bg-slate-50'); // Clean white/grey background for public link
+                            receiptModal.classList.add('bg-slate-50', 'z-[100]'); 
                         }
 
-                        // Add close handler to redirect home
+                        // For public view, the close button should act as a "Return To Site"
                         const closeBtn = document.querySelector('#receipt-modal button[onclick*="remove"]');
                         if (closeBtn) {
-                            closeBtn.innerHTML = '<i data-lucide="home" class="w-6 h-6"></i>'; // Home icon
+                            closeBtn.innerHTML = '<i data-lucide="home" class="w-6 h-6"></i>';
                             closeBtn.onclick = () => window.location.href = window.location.origin + window.location.pathname;
                         }
                         lucide.createIcons();
                     } else {
-                        alert("রিসিভটি পাওয়া যায়নি।");
-                        window.location.href = window.location.origin + window.location.pathname;
+                        throw new Error("No data found");
                     }
                 } catch (e) {
-                    console.error(e);
+                    console.error("Error loading receipt:", e);
+                    alert("রিসিভটি পাওয়া যায়নি। আপনার শেয়ার করা লিংকটি সঠিক কি না তা যাঁচাই করুন।");
                     window.location.href = window.location.origin + window.location.pathname;
                 }
                 showLoading(false);
