@@ -107,6 +107,9 @@
         .taka-small { font-size: 1.1em; margin-left: 2px; opacity: 0.85; }
 
         @media print {
+            @page {
+                margin: 0;
+            }
             body { 
                 background: white !important; 
                 margin: 0 !important;
@@ -136,7 +139,7 @@
             }
             #receipt-printable {
                 min-height: auto !important;
-                padding: 0 !important;
+                padding: 2cm !important; /* Adding padding to compensate for 0 browser margin */
             }
         }
     </style>
