@@ -108,10 +108,10 @@
 
         @media print {
             @page {
-                margin: 0;
+                margin: 0mm; /* Using zero margin to kill browser headers/footers */
             }
-            body { 
-                background: white !important; 
+            html, body {
+                height: auto !important;
                 margin: 0 !important;
                 padding: 0 !important;
             }
@@ -138,8 +138,9 @@
                 border-radius: 0 !important;
             }
             #receipt-printable {
-                min-height: auto !important;
-                padding: 2cm !important; /* Adding padding to compensate for 0 browser margin */
+                min-height: 0 !important; /* Removing the fixed min-height gap */
+                height: auto !important;
+                padding: 2.5cm !important; /* Standard professional paper padding */
             }
         }
     </style>
@@ -1580,7 +1581,7 @@
                     </div>
 
                     <!-- Receipt Template -->
-                    <div id="receipt-printable" class="p-8 md:p-12 text-slate-800 bg-white min-h-[800px] flex flex-col">
+                    <div id="receipt-printable" class="p-8 md:p-12 text-slate-800 bg-white flex flex-col">
                         <!-- Header -->
                         <div class="flex justify-between items-start mb-12">
                             <div>
