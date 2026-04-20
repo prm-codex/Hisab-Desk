@@ -562,6 +562,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     ${renderStatCard('রানিং অর্ডার', inProgressProjectsCount, 'loader', 'text-slate-400', 'border-blue-500', false, "switchView('projects')")}
                     ${renderStatCard('সম্পূর্ণ হয়েছে', deliveredInPeriod, 'check-circle', 'text-slate-400', 'border-emerald-400', false, "switchView('projects')")}
+                    ${renderStatCard('টোটাল ট্রানজেকশন', state.transactions.length, 'repeat', 'text-slate-400', 'border-purple-500', false, "switchView('transactions')")}
                     ${renderStatCard('গত সাত দিনের অর্ডার', deliveredWeekly, 'calendar', 'text-slate-400', 'border-purple-500', false, "switchView('projects')")}
                     ${renderStatCard('গত ৩০ দিনের অর্ডার', deliveredMonthly, 'calendar', 'text-slate-400', 'border-pink-500', false, "switchView('projects')")}
                 </div>
