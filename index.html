@@ -319,6 +319,9 @@
         }
 
         async function checkSession() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('view_receipt')) return; // Bypass auth for public recipes
+
             if (!supabaseClient) {
                 showAuthScreen();
                 alert("স্বাগতম! দয়া করে index.html ফাইলের উপরে Supabase URL এবং Key সেট করুন। এটা না করলে প্রজেক্টটি সঠিকভাবে কাজ করবে না।");
@@ -1645,12 +1648,12 @@
             const params = new URLSearchParams(window.location.search);
             const receiptId = params.get('view_receipt');
             if (receiptId) {
-                // If a public receipt is requested, we need to fetch data even if not logged in
-                // But normally the app redirects to auth. 
-                // For this demo, let's allow it if we can initialize Supabase
+                // Ensure layout is hidden during public view to avoid login screen background
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app-layout').classList.add('hidden');
+
                 showLoading(true);
                 try {
-                    // Try to initialize and fetch
                     if (!supabaseClient) {
                          supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                     }
@@ -1665,12 +1668,27 @@
                         state.projects = resP.data || [];
                         state.transactions = resT.data || [];
                         renderReceipt(receiptId);
+                        
+                        const receiptModal = document.getElementById('receipt-modal');
+                        if (receiptModal) {
+                            receiptModal.classList.remove('bg-slate-900/80');
+                            receiptModal.classList.add('bg-slate-50'); // Clean white/grey background for public link
+                        }
+
                         // Add close handler to redirect home
                         const closeBtn = document.querySelector('#receipt-modal button[onclick*="remove"]');
-                        if (closeBtn) closeBtn.onclick = () => window.location.href = window.location.pathname;
+                        if (closeBtn) {
+                            closeBtn.innerHTML = '<i data-lucide="home" class="w-6 h-6"></i>'; // Home icon
+                            closeBtn.onclick = () => window.location.href = window.location.origin + window.location.pathname;
+                        }
+                        lucide.createIcons();
+                    } else {
+                        alert("রিসিভটি পাওয়া যায়নি।");
+                        window.location.href = window.location.origin + window.location.pathname;
                     }
                 } catch (e) {
                     console.error(e);
+                    window.location.href = window.location.origin + window.location.pathname;
                 }
                 showLoading(false);
             }
