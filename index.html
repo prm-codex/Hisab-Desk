@@ -1653,14 +1653,31 @@
 
                     <!-- Bottom Action Area -->
                     <div class="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 no-print">
-                        <button onclick="window.print()" class="w-full bg-primary-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all active:scale-[0.98]">
-                            <i data-lucide="download" class="w-5 h-5"></i> ডাউনলোড PDF
+                        <button id="download-btn" onclick="handleDownloadReceipt()" class="w-full bg-primary-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all active:scale-[0.98]">
+                            <i data-lucide="download" class="w-5 h-5"></i> Download Receipt
                         </button>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
             lucide.createIcons();
+        }
+
+        async function handleDownloadReceipt() {
+            const btn = document.getElementById('download-btn');
+            if (!btn) return;
+            
+            const originalContent = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span> Processing...`;
+            
+            // Short delay to give visual feedback
+            setTimeout(() => {
+                window.print();
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                lucide.createIcons();
+            }, 600);
         }
 
         async function copyReceiptLink(buyerId) {
