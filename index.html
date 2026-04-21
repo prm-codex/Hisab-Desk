@@ -382,13 +382,13 @@
         }
 
         async function fetchData() {
-            if (!supabaseClient) return;
+            if (!supabaseClient || !state.user) return;
             showLoading(true);
             try {
                 const [buyersLog, projectsLog, transactionsLog] = await Promise.all([
-                    supabaseClient.from('buyers').select('*').order('created_at', { ascending: false }),
-                    supabaseClient.from('projects').select('*').order('created_at', { ascending: false }),
-                    supabaseClient.from('transactions').select('*').order('created_at', { ascending: false })
+                    supabaseClient.from('buyers').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false }),
+                    supabaseClient.from('projects').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false }),
+                    supabaseClient.from('transactions').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false })
                 ]);
 
                 state.buyers = buyersLog.data || [];
@@ -1564,9 +1564,7 @@
                 <div class="bg-white dark:bg-slate-900 w-full max-w-2xl min-h-screen sm:min-h-0 sm:rounded-2xl shadow-2xl overflow-hidden animate-fadeIn relative flex flex-col">
                     <!-- Actions -->
                     <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center no-print bg-slate-50 dark:bg-slate-800/50">
-                        <div class="flex gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                            Invoice Details
-                        </div>
+                        <div></div>
                         <div class="flex gap-2">
                             ${state.user ? `
                             <button onclick="copyReceiptLink('${buyerId}')" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 md:px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold flex items-center gap-2 hover:bg-slate-300 transition-all">
@@ -1724,11 +1722,17 @@
                             receiptModal.classList.add('bg-slate-50', 'z-[100]'); 
                         }
 
-                        // For public view, the close button should act as a "Return To Site"
+                        // For public view, the close button should simply handle the modal or view state
                         const closeBtn = document.querySelector('#receipt-modal button[onclick*="remove"]');
                         if (closeBtn) {
-                            closeBtn.innerHTML = '<i data-lucide="home" class="w-6 h-6"></i>';
-                            closeBtn.onclick = () => window.location.href = window.location.origin + window.location.pathname;
+                            closeBtn.onclick = () => {
+                                // If inside an iframe/split view, just remove modal, otherwise refresh
+                                if (window.self !== window.top) {
+                                    document.getElementById('receipt-modal').remove();
+                                } else {
+                                    window.location.href = window.location.origin + window.location.pathname;
+                                }
+                            };
                         }
                         lucide.createIcons();
                     } else {
