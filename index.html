@@ -108,12 +108,16 @@
 
         @media print {
             @page {
-                margin: 0mm; /* Using zero margin to kill browser headers/footers */
+                margin: 0;
+                size: auto;
             }
             html, body {
                 height: auto !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                background: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             #app-layout, #auth-screen, #global-loader, #sidebar-overlay, .no-print { 
                 display: none !important; 
@@ -121,26 +125,29 @@
             #receipt-modal {
                 position: absolute !important;
                 left: 0 !important;
+                right: 0 !important;
                 top: 0 !important;
                 width: 100% !important;
-                height: auto !important;
-                display: block !important;
+                display: flex !important;
+                justify-content: center !important;
                 background: white !important;
-                z-index: 9999 !important;
                 padding: 0 !important;
-                overflow: visible !important;
             }
             #receipt-modal > div {
                 box-shadow: none !important;
                 border: none !important;
-                max-width: 100% !important;
                 width: 100% !important;
+                max-width: 450px !important; /* Force mobile-like narrow look on PDF */
                 border-radius: 0 !important;
             }
             #receipt-printable {
-                min-height: 0 !important; /* Removing the fixed min-height gap */
-                height: auto !important;
-                padding: 2.5cm !important; /* Standard professional paper padding */
+                padding: 24px !important;
+                width: 100% !important;
+                background: white !important;
+                color: #1e293b !important;
+            }
+            #receipt-printable * {
+                color: #1e293b !important;
             }
         }
     </style>
