@@ -128,8 +128,7 @@
                 right: 0 !important;
                 top: 0 !important;
                 width: 100% !important;
-                display: flex !important;
-                justify-content: center !important;
+                display: block !important;
                 background: white !important;
                 padding: 0 !important;
             }
@@ -137,15 +136,20 @@
                 box-shadow: none !important;
                 border: none !important;
                 width: 100% !important;
-                max-width: 450px !important; /* Force mobile-like narrow look on PDF */
+                max-width: none !important; 
                 border-radius: 0 !important;
             }
             #receipt-printable {
-                padding: 24px !important;
+                padding: 40px !important;
                 width: 100% !important;
                 background: white !important;
                 color: #1e293b !important;
             }
+            #receipt-printable h1 { font-size: 28px !important; }
+            #receipt-printable h2 { font-size: 20px !important; }
+            #receipt-printable h3 { font-size: 18px !important; }
+            #receipt-printable .text-sm { font-size: 14px !important; }
+            #receipt-printable table { font-size: 14px !important; }
             #receipt-printable * {
                 color: #1e293b !important;
             }
