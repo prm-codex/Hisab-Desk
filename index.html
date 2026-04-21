@@ -1581,55 +1581,55 @@
                     </div>
 
                     <!-- Receipt Template -->
-                    <div id="receipt-printable" class="p-8 md:p-12 text-slate-800 bg-white flex-1 flex flex-col overflow-x-auto">
-                        <div class="min-w-[600px] flex-1 flex flex-col">
+                    <div id="receipt-printable" class="p-4 md:p-12 text-slate-800 bg-white flex-1 flex flex-col">
+                        <div class="flex-1 flex flex-col">
                             <!-- Header -->
-                            <div class="flex justify-between items-start gap-4 mb-12">
+                            <div class="flex justify-between items-start gap-2 mb-8 md:mb-12">
                                 <div>
-                                    <h1 class="text-3xl font-black tracking-tight text-primary-600 mb-1">Hisab Desk</h1>
-                                    <p class="text-sm text-slate-500">Professional Invoice & Statement</p>
+                                    <h1 class="text-xl md:text-3xl font-black tracking-tight text-primary-600 mb-0.5">Hisab Desk</h1>
+                                    <p class="text-[9px] md:text-sm text-slate-500">Professional Invoice & Statement</p>
                                 </div>
                                 <div class="text-right">
-                                    <h2 class="text-xl font-bold uppercase tracking-widest text-slate-300 mb-1">Invoice</h2>
-                                    <p class="text-xs font-bold text-slate-500">Date: ${new Date().toLocaleDateString('bn-BD')}</p>
+                                    <h2 class="text-sm md:text-xl font-bold uppercase tracking-widest text-slate-300 mb-0.5">Invoice</h2>
+                                    <p class="text-[8px] md:text-xs font-bold text-slate-500">Date: ${new Date().toLocaleDateString('bn-BD')}</p>
                                 </div>
                             </div>
 
                             <!-- Info -->
-                            <div class="grid grid-cols-2 gap-8 mb-12">
+                            <div class="grid grid-cols-2 gap-4 md:gap-8 mb-8 md:mb-12">
                                 <div>
-                                    <h4 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Bill To:</h4>
-                                    <h3 class="text-xl font-bold mb-1">${buyer.name}</h3>
-                                    <div class="text-sm text-slate-500 space-y-0.5">
+                                    <h4 class="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5 md:mb-3">Bill To:</h4>
+                                    <h3 class="text-sm md:text-xl font-bold mb-0.5">${buyer.name}</h3>
+                                    <div class="text-[9px] md:text-sm text-slate-500 space-y-0.5 leading-tight">
                                         <p>${buyer.contact || ''}</p>
-                                        <p>${buyer.email || ''}</p>
-                                        <p>${buyer.address || ''}</p>
+                                        <p class="truncate max-w-[120px] md:max-w-none">${buyer.email || ''}</p>
+                                        <p class="truncate max-w-[120px] md:max-w-none">${buyer.address || ''}</p>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <h4 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">From:</h4>
-                                    <h3 class="text-xl font-bold mb-1">PRM Codex</h3>
-                                    <p class="text-sm text-slate-500">Developer & Designer</p>
+                                    <h4 class="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5 md:mb-3">From:</h4>
+                                    <h3 class="text-sm md:text-xl font-bold mb-0.5">PRM Codex</h3>
+                                    <p class="text-[9px] md:text-sm text-slate-500">Developer & Designer</p>
                                 </div>
                             </div>
 
                             <!-- Summary Table -->
                             <div class="flex-1">
-                                <table class="w-full text-left mb-10">
+                                <table class="w-full text-left mb-6 md:mb-10">
                                     <thead class="border-b-2 border-slate-900">
                                         <tr>
-                                            <th class="py-4 font-bold text-xs uppercase tracking-widest">Item Description</th>
-                                            <th class="py-4 text-right font-bold text-xs uppercase tracking-widest">Amount</th>
+                                            <th class="py-2.5 md:py-4 font-bold text-[8px] md:text-xs uppercase tracking-widest">Item Description</th>
+                                            <th class="py-2.5 md:py-4 text-right font-bold text-[8px] md:text-xs uppercase tracking-widest">Amount</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
                                         ${projects.map(p => `
                                             <tr>
-                                                <td class="py-4">
-                                                    <div class="font-bold text-sm">${p.project_name}</div>
-                                                    <div class="text-[10px] text-slate-400 italic">${p.status}</div>
+                                                <td class="py-2.5 md:py-4">
+                                                    <div class="font-bold text-[10px] md:text-sm">${p.project_name}</div>
+                                                    <div class="text-[8px] md:text-[10px] text-slate-400 italic">${p.status}</div>
                                                 </td>
-                                                <td class="py-4 text-right font-bold text-sm">
+                                                <td class="py-2.5 md:py-4 text-right font-bold text-[10px] md:text-sm">
                                                     ${Number(p.total_amount).toLocaleString()}৳
                                                 </td>
                                             </tr>
@@ -1637,25 +1637,25 @@
                                     </tbody>
                                     <tfoot class="border-t-2 border-slate-900/10">
                                         <tr>
-                                            <td class="py-4 font-bold text-sm text-slate-400">Total Price</td>
-                                            <td class="py-4 text-right font-bold text-lg">${subtotal.toLocaleString()}৳</td>
+                                            <td class="py-2 md:py-4 font-bold text-[9px] md:text-sm text-slate-400">Total Price</td>
+                                            <td class="py-2 md:py-4 text-right font-bold text-xs md:text-lg">${subtotal.toLocaleString()}৳</td>
                                         </tr>
                                         <tr>
-                                            <td class="py-4 font-bold text-sm text-emerald-500">Total Paid</td>
-                                            <td class="py-4 text-right font-bold text-lg text-emerald-600">-${paid.toLocaleString()}৳</td>
+                                            <td class="py-2 md:py-4 font-bold text-[9px] md:text-sm text-emerald-500">Total Paid</td>
+                                            <td class="py-2 md:py-4 text-right font-bold text-xs md:text-lg text-emerald-600">-${paid.toLocaleString()}৳</td>
                                         </tr>
                                         <tr class="bg-slate-50">
-                                            <td class="p-4 font-bold text-base border-l-4 border-red-500">Remaining Due</td>
-                                            <td class="p-4 text-right font-black text-2xl text-red-500">${balance.toLocaleString()}৳</td>
+                                            <td class="p-2.5 md:p-4 font-bold text-[10px] md:text-base border-l-4 border-red-500">Remaining Due</td>
+                                            <td class="p-2.5 md:p-4 text-right font-black text-base md:text-2xl text-red-500">${balance.toLocaleString()}৳</td>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
 
                             <!-- Footer -->
-                            <div class="border-t border-slate-100 pt-8 mt-12 text-center">
-                                <p class="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-2">Thank you for your business!</p>
-                                <p class="text-[9px] text-slate-300">This is a system generated computer receipt. Contact PRM Codex for any queries.</p>
+                            <div class="border-t border-slate-100 pt-4 md:pt-8 mt-4 md:mt-12 text-center">
+                                <p class="text-[8px] md:text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1">Thank you for your business!</p>
+                                <p class="text-[7px] md:text-[9px] text-slate-300">This is a system generated computer receipt. Contact PRM Codex for any queries.</p>
                             </div>
                         </div>
                     </div>
